@@ -1,0 +1,269 @@
+---
+title: "Capstone"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tibble)
+```
+- The following corresponds to waves on which interviews took place.
+```{r}
+happiness1990 <- read.table ('../data/WV2_Data_csv_v20180912.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
+happiness1995 <- read.table ('../data/WV3_Data_csv_v20180912.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
+happiness1999 <- read.table ('../data/WV4_Data_csv_v20201117.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
+happiness2005 <- read.table ('../data/WV5_Data_csv_v20180912.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
+happiness2010 <- read.table ('../data/WV6_Data_csv_v20201117.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
+happiness2017 <- read.table ('../data/WVS_Cross-National_Wave_7_csv_v5_0.csv', sep = ",", header = TRUE, stringsAsFactors = FALSE)
+
+gdp <- read_csv('../data/gdp.csv')
+total_population <- read.csv('../data/totalpopulation.csv', header = FALSE)
+poverty <- read.csv('../data/poverty.csv', header = FALSE)
+```
+
+```{r}
+poverty
+```
+```{r}
+colnames(total_population) <- total_population[1,]
+total_population <- total_population[-1, ]
+```
+
+```{r}
+total_population 
+```
+
+```{r}
+gdp
+```
+
+- Data prep. The the second wave of surveys correspond to 1990 to 1994. 
+V18 or feeling of happiness is measured:
+1 Very happy
+2 Quite happy
+3 Not very happy
+4 Not at all happy
+9 Don't know
+
+V96 or Satisfaction with your life is measured:
+1 Dissatisfied - 10 Satisfied
+
+V116 or Job satisfaction is measured: 
+1 Dissatisfied - 10 Satisfied
+
+V132 or How satisfied are you with the financial situation of your household? is measured: 
+1 Dissatisfied - 10 Satisfied
+
+V353 or Sex is measured: 
+1 - male
+2 female
+```{r}
+happiness_1990 <- happiness1990%>% 
+  transmute(
+    CountryCode = V2,
+    Feeling_of_happiness = V18,
+    Life_satisfaction = V96,
+    Financial_satisfaction = V132,
+    Sex = V353,
+    Age = V355,
+    Year = V377)
+```
+
+- 1995
+```{r}
+happiness_1995 <- happiness1995%>% 
+  transmute(
+    CountryCode = V2,
+    Feeling_of_happiness = V10,
+    Life_satisfaction = V65,
+    Financial_satisfaction = V64,
+    Sex = V214,
+    Age = V216,
+    Year = V238)
+```
+
+-1999.
+```{r}
+happiness_1999 <- happiness1999%>% 
+  transmute(
+    Country = B_COUNTRY_ALPHA,
+    Feeling_of_happiness = V11,
+    Life_satisfaction = V81,
+    Financial_satisfaction = V80,
+    Sex = V223,
+    Age = V225,
+    Year = V246)
+```
+
+
+- 2005
+```{r}
+happiness_2005 <- happiness2005%>%
+   transmute(
+    CountryCode = V2,
+    Feeling_of_happiness = V10,
+    Life_satisfaction = V22,
+    Financial_satisfaction = V68,
+    Sex = V235,
+    Age = V237,
+    Year = V260)
+```
+
+- 2010
+```{r}
+happiness_2010 <-happiness2010%>%
+   transmute(
+    Country = C_COW_ALPHA, 
+    Feeling_of_happiness = V10,
+    Life_satisfaction = V23,
+    Financial_satisfaction = V59,
+    Sex = V240,
+    Age = V242,
+    Year = V262)
+  
+```
+
+- 2017
+```{r}
+happiness_2017 <- happiness2017%>%
+  transmute(
+    Country = C_COW_ALPHA,
+    Feeling_of_happiness = Q46,
+    Life_satisfaction = Q49,
+    Financial_satisfaction = Q50,
+    Sex = Q260,
+    Age = Q262,
+    Year = J_INTDATE)
+
+```
+
+-Fixing the date format in 2017 table. 
+```{r}
+# Convert the column to a date object
+happiness_2017$Year <- as.Date(as.character(happiness_2017$Year), format = "%Y%m%d")
+
+# Extract the year from the date column
+happiness_2017$Year <- format(happiness_2017$Year, "%Y")
+```
+
+-Merging the datasets. 
+
+```{r}
+# Merge tables with the same column names
+merged_tables_1 <- rbind(happiness_1990, happiness_1995, happiness_2005)
+```
+
+```{r}
+merged_tables_2 <- rbind(happiness_1999, happiness_2010, happiness_2017)
+```
+
+```{r}
+# Add a missing column to merged_tables_1
+merged_tables_1$Country <- NA
+merged_tables_2$CountryCode <- NA
+```
+
+
+```{r}
+# Merge the tables
+happiness_tables <- rbind(merged_tables_1, merged_tables_2)
+
+# Print the merged table
+happiness_tables
+```
+
+```{r}
+happiness_tables %>% count(Life_satisfaction, sort = TRUE)
+```
+
+
+```{r}
+happiness_tables %>% count(Feeling_of_happiness, sort = TRUE)
+```
+
+```{r}
+happiness_tables %>% count(Financial_satisfaction, sort = TRUE)
+```
+
+
+```{r}
+# Filter rows based on specific values across all columns
+filtered_happiness <- happiness_tables %>%
+  filter(across(everything(), ~ !(. %in% c("-1", "-2", "-3", "-4", "-5")), .names = "any_vars({.col})"))
+
+# View the filtered data
+print(filtered_happiness)
+```
+
+
+```{r}
+filtered_happiness %>% count(Feeling_of_happiness, sort = TRUE)
+```
+
+```{r}
+Really_satisfied <- filtered_happiness %>% filter(Life_satisfaction >= 5 & Life_satisfaction <= 10)
+```
+
+```{r}
+Really_happy <- filtered_happiness %>% filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2)
+```
+
+```{r}
+sum_by_year <- filtered_happiness %>% 
+  group_by(Year) %>% 
+  summarize(sum_LS = sum(Life_satisfaction))
+
+print(sum_by_year)
+```
+
+
+```{r}
+# Histogram of Feeling_of_happiness
+ggplot(filtered_happiness, aes(x = Feeling_of_happiness)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "black") +
+  labs(x = "Feeling of Happiness", y = "Count")
+```
+```{r}
+# Histogram of Feeling_of_happiness
+ggplot(filtered_happiness, aes(x = Life_satisfaction)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "black") +
+  labs(x = "Life Satisfaction", y = "Count")
+
+```
+
+```{r}
+ggplot(filtered_happiness, aes(x = Financial_satisfaction)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "black") +
+  labs(x = "Financial Satisfaction", y = "Count")
+```
+
+
+```{r}
+# Create a bar plot
+ggplot(sum_by_year, aes(x = Year, y = sum_LS)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Year", y = "Sum of Life Satisfaction") +
+  ggtitle("Sum of Life Satisfaction by Year")
+```
+
+```{r}
+# Group the filtered data by country and calculate the sum of Life_satisfaction
+sum_by_country <- filtered_happiness %>% group_by(Country) %>% summarize(sum_LS = sum(Life_satisfaction))
+
+print(sum_by_country)
+```
+
+```{r}
+sum_by_age <- filtered_happiness %>% group_by(Age) %>% summarize(sum_LS = sum(Life_satisfaction))
+
+print(sum_by_age)
+```
+```{r}
+sum_by_sex <- filtered_happiness %>% group_by(Sex) %>% summarize(sum_LS = sum(Life_satisfaction))
+
+print(sum_by_sex)
+```
+

@@ -1,0 +1,13 @@
+# Databases #
+#############
+data/
+
+
+# Files #
+#########
+.DS_Store
+.RData
+.RDataTmp
+.Rhistory
+Notebook/.DS_Store
+Notebook/Capstone.nb.html
