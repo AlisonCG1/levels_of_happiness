@@ -28,8 +28,8 @@ poverty <- read.csv('../data/poverty.csv', header = FALSE)
 poverty
 ```
 ```{r}
-colnames(total_population) <- total_population[1,]
-total_population <- total_population[-1, ]
+colnames(total_population) <- total_population[3,]
+total_population <- total_population[-3, ]
 ```
 
 ```{r}
