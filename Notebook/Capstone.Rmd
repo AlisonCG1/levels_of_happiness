@@ -19,25 +19,39 @@ happiness2005 <- read.table ('../data/WV5_Data_csv_v20180912.csv', sep = ";", he
 happiness2010 <- read.table ('../data/WV6_Data_csv_v20201117.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
 happiness2017 <- read.table ('../data/WVS_Cross-National_Wave_7_csv_v5_0.csv', sep = ",", header = TRUE, stringsAsFactors = FALSE)
 
-gdp <- read_csv('../data/gdp.csv')
-total_population <- read.csv('../data/totalpopulation.csv', header = FALSE)
-poverty <- read.csv('../data/poverty.csv', header = FALSE)
+GDP <- read.csv('../data/gdp.csv',  header = FALSE)
+Total_Population <- read.csv('../data/totalpopulation.csv', header = FALSE)
+Poverty <- read.csv('../data/poverty.csv', header = FALSE)
+```
+
+- After reading the data (Poverty, Total Population and GDP), there was some cleaning to do. 
+```{r}
+colnames(Poverty) <- Poverty[1,]
+Poverty <- Poverty[-1, ]
 ```
 
 ```{r}
-poverty
+Poverty
 ```
 ```{r}
-colnames(total_population) <- total_population[3,]
-total_population <- total_population[-3, ]
-```
-
-```{r}
-total_population 
+colnames(Total_Population) <- Total_Population[3,]
+Total_Population <- Total_Population[-3, ]
 ```
 
 ```{r}
-gdp
+# Delete rows with specific values
+Total_Population  <- Total_Population[!(Total_Population$"Country Name" == "Data Source" | Total_Population$"Country Name" == "Last Updated Date"), ]
+Total_Population
+```
+
+```{r}
+colnames(GDP) <- GDP[2,]
+GDP <- GDP[-2, ]
+```
+
+```{r}
+GDP <- GDP[!(GDP$"Country Name" == "Last Updated Date"), ]
+GDP
 ```
 
 - Data prep. The the second wave of surveys correspond to 1990 to 1994. 
