@@ -21,7 +21,7 @@ happiness2017 <- read.table ('../data/WVS_Cross-National_Wave_7_csv_v5_0.csv', s
 
 GDP <- read.csv('../data/gdp.csv',  header = FALSE)
 Total_Population <- read.csv('../data/totalpopulation.csv', header = FALSE)
-Poverty <- read.csv('../data/poverty.csv', header = FALSE)
+Poverty <- read.csv('../data/poverty-explorer.csv', header = FALSE)
 ```
 
 - After reading the data (Poverty, Total Population and GDP), there was some cleaning to do. 
@@ -34,6 +34,27 @@ Poverty <- Poverty[-1, ]
 Poverty
 ```
 ```{r}
+poverty_transformed <-  Poverty%>%
+  transmute(
+    Country = Entity, 
+   `Number_below_$3.65_a_day` = `Number below $3.65 a day`,
+    `Number_below_$6.85_a_day` = `Number below $6.85 a day`,
+    `Number_below_$10_a_day` = `Number below $10 a day`,
+    Year = Year
+  )
+
+poverty_transformed
+```
+```{r}
+poverty_transformed <- poverty_transformed[!(poverty_transformed$Year >= 1969 & poverty_transformed$Year <= 1989), ]
+```
+
+
+```{r}
+Total_Population
+```
+
+```{r}
 colnames(Total_Population) <- Total_Population[3,]
 Total_Population <- Total_Population[-3, ]
 ```
@@ -45,13 +66,89 @@ Total_Population
 ```
 
 ```{r}
+# Use pivot_longer to reshape the data
+population_transformed <- Total_Population %>%
+  pivot_longer(cols = `1960`:`2021`,
+               names_to = "Year",
+               values_to = "Value")
+
+# View the transformed dataframe
+print(population_transformed)
+```
+
+```{r}
+population_transformed <- population_transformed%>%
+  transmute(
+    Country = `Country Name`,
+    CountryCode = `Country Code`, 
+    total_population = Value,
+    Year = Year
+  )
+
+population_transformed
+```
+```{r}
+population_transformed <- population_transformed[!(population_transformed$Year >= 1960 & population_transformed$Year <= 1989), ]
+```
+
+
+```{r}
+GDP
+```
+
+```{r}
 colnames(GDP) <- GDP[2,]
 GDP <- GDP[-2, ]
 ```
 
+
 ```{r}
-GDP <- GDP[!(GDP$"Country Name" == "Last Updated Date"), ]
+GDP <- GDP[!(GDP$"Country Name" == "Data Source" | GDP$"Country Name" == "Last Updated Date"), ]
 GDP
+```
+```{r}
+# Use pivot_longer to reshape the data
+gdp_transformed <- GDP %>%
+  pivot_longer(cols = `1960`:`2021`,
+               names_to = "Year",
+               values_to = "Value")
+
+# View the transformed dataframe
+print(gdp_transformed)
+```
+
+- Deleting rows that aren't needed.
+```{r}
+gdp_transformed <- gdp_transformed%>%
+  transmute(
+    Country = `Country Name`,
+    CountryCode = `Country Code`, 
+    gdp = Value,
+    Year = Year
+  )
+
+gdp_transformed 
+```
+
+```{r}
+gdp_transformed <- gdp_transformed[!(gdp_transformed$Year >= 1960 & gdp_transformed$Year <= 1989), ]
+```
+
+```{r}
+gdp_transformed
+```
+
+
+- Merging tables. 
+```{r}
+# Merging the data frames based on 'CountryName'
+merged_df <- merge(poverty_transformed, population_transformed, by = c("Country", "Year"))
+
+Population_total <- merge(gdp_transformed, merged_df, by = c("Country", "CountryCode", "Year"))
+```
+
+```{r}
+Population_total
 ```
 
 - Data prep. The the second wave of surveys correspond to 1990 to 1994. 
@@ -163,7 +260,7 @@ happiness_2017$Year <- as.Date(as.character(happiness_2017$Year), format = "%Y%m
 happiness_2017$Year <- format(happiness_2017$Year, "%Y")
 ```
 
--Merging the datasets. 
+-Merging the happiness datasets. 
 
 ```{r}
 # Merge tables with the same column names
@@ -203,6 +300,7 @@ happiness_tables %>% count(Financial_satisfaction, sort = TRUE)
 ```
 
 
+- Deleting unnecesary values from the Survey data. 
 ```{r}
 # Filter rows based on specific values across all columns
 filtered_happiness <- happiness_tables %>%
@@ -212,7 +310,7 @@ filtered_happiness <- happiness_tables %>%
 print(filtered_happiness)
 ```
 
-
+- Basic EDA on Happiness. 
 ```{r}
 filtered_happiness %>% count(Feeling_of_happiness, sort = TRUE)
 ```
@@ -280,4 +378,10 @@ sum_by_sex <- filtered_happiness %>% group_by(Sex) %>% summarize(sum_LS = sum(Li
 
 print(sum_by_sex)
 ```
+
+- Ready to merge population and happiness tables to be able to find correlation between data.
+```{r}
+filtered_happiness
+```
+
 
