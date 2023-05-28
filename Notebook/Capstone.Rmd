@@ -18,10 +18,20 @@ happiness1999 <- read.table ('../data/WV4_Data_csv_v20201117.csv', sep = ";", he
 happiness2005 <- read.table ('../data/WV5_Data_csv_v20180912.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
 happiness2010 <- read.table ('../data/WV6_Data_csv_v20201117.csv', sep = ";", header = TRUE, stringsAsFactors = FALSE)
 happiness2017 <- read.table ('../data/WVS_Cross-National_Wave_7_csv_v5_0.csv', sep = ",", header = TRUE, stringsAsFactors = FALSE)
+```
 
+- Population Data
+```{r}
 GDP <- read.csv('../data/gdp.csv',  header = FALSE)
 Total_Population <- read.csv('../data/totalpopulation.csv', header = FALSE)
 Poverty <- read.csv('../data/poverty-explorer.csv', header = FALSE)
+```
+
+- Geolocation Data
+```{r}
+countries_code <- read_csv("../data/countries.csv.xls")
+world_countries <- read_csv("../data/World_Countries_(Generalized).csv")
+regions <- read_csv("../data/worldregions.csv")
 ```
 
 - After reading the data (Poverty, Total Population and GDP), there was some cleaning to do. 
@@ -406,55 +416,74 @@ Population_total
 ```
 - Starting to prepare the map. 
 
-```{r}
-population_happiness <- merge(Population_total, filtered_happiness, by.x = c("CountryCode", "Year"), by.y = c("Country", "Year"))
-
-population_happiness
-```
-
-```{r}
-# Delete the column using the subset() function
-population_happiness <- subset(population_happiness, select = -CountryCode.y)
-
-# View the updated dataframe
-print(population_happiness)
-```
-
-```{r}
-# Check for any duplicated values in the dataframe
-any_duplicate <- anyDuplicated(population_happiness)
-
-# View the result
-print(any_duplicate)
-```
-
-
-```{r}
-# Drop duplicates based on all columns
-population_happiness <- population_happiness[!duplicated(population_happiness), ]
-
-# View the dataframe without duplicates
-print(population_happiness)
-```
-
-```{r}
-# Convert 'CountryCode' column to character in 'filtered_happiness' dataframe
-filtered_happiness$CountryCode <- as.character(filtered_happiness$CountryCode)
-
-# Perform the left join
-merged_table_test <- merge(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
-
-# View the merged table
-print(merged_table_test)
-```
-
-
+Thw following code is merging the population info table with happiness info table. 
 ```{r}
 # Perform a left join without losing rows
-merged_table <-  dplyr::left_join(filtered_happiness, Population_total, by.y = c("CountryCode", "Year"), by.x = c("Country", "Year"))
+population_happiness <-  dplyr::left_join(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
 
 # View the merged table
-print(merged_table)
+print(population_happiness)
+```
+
+- Now is time to merge the data for the map. 
+
+- Clean geolocation data 
+
+```{r}
+countries_code
+```
+```{r}
+countries_code <- countries_code%>%
+  select(-c("country"))
+```
+
+```{r}
+colnames(countries_code) <- c("Latitude", "Longitude", "Country")
+countries_code
+```
+
+```{r}
+world_countries <- world_countries %>%
+  select(-c("FID", "ISO", "COUNTRYAFF","AFF_ISO"))
+world_countries
+```
+
+```{r}
+colnames(world_countries) <- c("Country", "Length", "Area")
+world_countries
+```
+
+```{r}
+regions <- regions%>%
+  select(-c("Code", "Year"))
+
+colnames(regions) <- c("Country", "Region")
+```
+
+```{r}
+regions
+```
+
+```{r}
+region <- left_join(regions, countries_code, by= "Country")
+```
+
+```{r}
+region <- left_join(region, world_countries, by= "Country")
+
+region
+```
+
+```{r}
+# Perform a left join to merge the tables
+Happiness_levels <- merge(population_happiness, region, by = "Country", all.x = TRUE)
+
+# View the merged table
+print(Happiness_levels)
 ```
 
 
+- saving the dataset to build the shinny app
+```{r}
+#write.csv(Happiness_levels, "Happiness_levels.csv")
+```
