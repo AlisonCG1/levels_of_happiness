@@ -94,6 +94,7 @@ population_transformed <- population_transformed[!(population_transformed$Year >
 
 ```{r}
 GDP
+
 ```
 
 ```{r}
@@ -268,6 +269,10 @@ merged_tables_1 <- rbind(happiness_1990, happiness_1995, happiness_2005)
 ```
 
 ```{r}
+merged_tables_2
+```
+
+```{r}
 merged_tables_2 <- rbind(happiness_1999, happiness_2010, happiness_2017)
 ```
 
@@ -285,6 +290,7 @@ happiness_tables <- rbind(merged_tables_1, merged_tables_2)
 # Print the merged table
 happiness_tables
 ```
+
 
 ```{r}
 happiness_tables %>% count(Life_satisfaction, sort = TRUE)
@@ -383,5 +389,43 @@ print(sum_by_sex)
 ```{r}
 filtered_happiness
 ```
+
+```{r}
+ filtered_happiness
+```
+- Starting to prepare the map. 
+
+```{r}
+population_happiness <- merge(Population_total, filtered_happiness, by.x = c("CountryCode", "Year"), by.y = c("Country", "Year"))
+
+population_happiness
+```
+
+```{r}
+# Delete the column using the subset() function
+population_happiness <- subset(population_happiness, select = -CountryCode.y)
+
+# View the updated dataframe
+print(population_happiness)
+```
+
+```{r}
+# Check for any duplicated values in the dataframe
+any_duplicate <- anyDuplicated(population_happiness)
+
+# View the result
+print(any_duplicate)
+```
+
+
+```{r}
+# Drop duplicates based on all columns
+population_happiness <- population_happiness[!duplicated(population_happiness), ]
+
+# View the dataframe without duplicates
+print(population_happiness)
+```
+
+
 
 
