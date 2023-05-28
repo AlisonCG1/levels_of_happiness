@@ -94,7 +94,6 @@ population_transformed <- population_transformed[!(population_transformed$Year >
 
 ```{r}
 GDP
-
 ```
 
 ```{r}
@@ -102,6 +101,9 @@ colnames(GDP) <- GDP[2,]
 GDP <- GDP[-2, ]
 ```
 
+```{r}
+GDP
+```
 
 ```{r}
 GDP <- GDP[!(GDP$"Country Name" == "Data Source" | GDP$"Country Name" == "Last Updated Date"), ]
@@ -269,10 +271,6 @@ merged_tables_1 <- rbind(happiness_1990, happiness_1995, happiness_2005)
 ```
 
 ```{r}
-merged_tables_2
-```
-
-```{r}
 merged_tables_2 <- rbind(happiness_1999, happiness_2010, happiness_2017)
 ```
 
@@ -285,10 +283,23 @@ merged_tables_2$CountryCode <- NA
 
 ```{r}
 # Merge the tables
-happiness_tables <- rbind(merged_tables_1, merged_tables_2)
+happiness_tables <- rbind(merged_tables_2, merged_tables_1)
 
 # Print the merged table
 happiness_tables
+```
+
+```{r}
+# Drop duplicates based on all columns
+happiness_tables <- subset(happiness_tables, select = -CountryCode)
+```
+
+```{r}
+# Rename the column
+happiness_tables <- rename(happiness_tables, CountryCode = Country)
+
+# View the data frame with the renamed column
+print(happiness_tables)
 ```
 
 
@@ -369,7 +380,7 @@ ggplot(sum_by_year, aes(x = Year, y = sum_LS)) +
 
 ```{r}
 # Group the filtered data by country and calculate the sum of Life_satisfaction
-sum_by_country <- filtered_happiness %>% group_by(Country) %>% summarize(sum_LS = sum(Life_satisfaction))
+sum_by_country <- filtered_happiness %>% group_by(CountryCode) %>% summarize(sum_LS = sum(Life_satisfaction))
 
 print(sum_by_country)
 ```
@@ -391,7 +402,7 @@ filtered_happiness
 ```
 
 ```{r}
- filtered_happiness
+Population_total
 ```
 - Starting to prepare the map. 
 
@@ -426,6 +437,24 @@ population_happiness <- population_happiness[!duplicated(population_happiness), 
 print(population_happiness)
 ```
 
+```{r}
+# Convert 'CountryCode' column to character in 'filtered_happiness' dataframe
+filtered_happiness$CountryCode <- as.character(filtered_happiness$CountryCode)
 
+# Perform the left join
+merged_table_test <- merge(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
+
+# View the merged table
+print(merged_table_test)
+```
+
+
+```{r}
+# Perform a left join without losing rows
+merged_table <-  dplyr::left_join(filtered_happiness, Population_total, by.y = c("CountryCode", "Year"), by.x = c("Country", "Year"))
+
+# View the merged table
+print(merged_table)
+```
 
 
