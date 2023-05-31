@@ -483,14 +483,37 @@ Happiness_levels <- merge(population_happiness, region, by = "Country", all.x = 
 print(Happiness_levels)
 ```
 
-
-- saving the dataset to build the shinny app
+- Creating a table for the map. 
+1. Creating a range of ages
 ```{r}
-#write.csv(Happiness_levels, "Happiness_levels.csv")
+Happiness_map <- Happiness_levels%>%
+  mutate(age_range = case_when(Age >= 13 & Age <=19 ~"13 - 18",
+                               Age >= 20 & Age <= 39 ~"20 - 30",
+                               Age >= 40 & Age <= 59 ~"40 - 50",
+                               Age >= 60 & Age <= 79 ~"60 - 70",
+                               Age >= 80 & Age <= 103 ~"80 +"))
+Happiness_map
 ```
 
+```{r}
+Filtered_df <- Happiness_map%>%
+  group_by(Country, Year) %>%
+  mutate(count = row_number()) %>%
+  ungroup()
+```
+```{r}
+# Remove duplicates and select only necessary columns
+Filtered_df <- Filtered_df %>%
+  distinct(Country, Year, .keep_all = TRUE)%>%
+  select(-count)
+```
 
-
+```{r}
+Filtered_df
+```
+- Value counts for happiness 
+- Age (pivot)
+- median
 
 ```{r}
 #write.csv(Happiness, "Happiness.csv")
