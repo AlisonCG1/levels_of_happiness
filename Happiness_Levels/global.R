@@ -23,20 +23,8 @@ happiness_cols = "#F7FBFF"
 Life_satistaction_cols = "#FFF5F0"
 
 
-Happiness <- read_csv("Happiness.csv")
+Happiness <- read_csv("mean_data.csv")
 
-#Plotting cumulative of happiness for map functions.
-
-# Filter the dataset where 1 and 2 represent happy and really happy in the dataset. 
-Really_happy <- Happiness%>% filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2)
-
-# Calculate cumulative sum by year.
-Really_happy <- Really_happy %>%
-  group_by(Year) %>%
-  mutate(cumulative_sum = cumsum(Feeling_of_happiness))
-
-#repeating the process for life satisfaction.
-Really_satisfied <- Happiness %>% filter(Life_satisfaction >= 5 & Life_satisfaction <= 10) 
 
 # Create the cumulative plot for life satisfaction
 cumulative_counts <- cumsum(table(Really_satisfied$Life_satisfaction))

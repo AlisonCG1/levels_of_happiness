@@ -11,7 +11,8 @@ ui <- dashboardPage(skin = "black",
                     dashboardSidebar(
                       sidebarMenu(
                         menuItem("Map", tabName = "Map", icon = icon("map")),
-                        menuItem("Plots", icon = icon("th"), tabName = "Plots")
+                        menuItem("Plots", icon = icon("th"), tabName = "Plots"),
+                        selectInput("country", "Country:", choices = unique(Happiness$Country))
                         
                       )
                     ),

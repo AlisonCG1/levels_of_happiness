@@ -420,10 +420,17 @@ Population_total
 Thw following code is merging the population info table with happiness info table. 
 ```{r}
 # Perform a left join without losing rows
-population_happiness <-  merge(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
+population_happiness <-  dplyr::left_join(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
 
 # View the merged table
 print(population_happiness)
+```
+
+```{r}
+happiness_counts <- table(population_happiness$Year, population_happiness$Feeling_of_happiness)
+
+# View the resulting table of happiness counts
+print(happiness_counts)
 ```
 
 - Now is time to merge the data for the map. 
@@ -483,10 +490,16 @@ Happiness_levels <- merge(population_happiness, region, by = "Country", all.x = 
 print(Happiness_levels)
 ```
 
+```{r}
+Map_happiness <- Happiness_levels%>%
+  filter(Year == 2018)
+print(Map_happiness)
+```
+
 - Creating a table for the map. 
 1. Creating a range of ages
 ```{r}
-Happiness_map <- Happiness_levels%>%
+Happiness_map <- Map_happiness%>%
   mutate(age_range = case_when(Age >= 13 & Age <=19 ~"13 - 18",
                                Age >= 20 & Age <= 39 ~"20 - 30",
                                Age >= 40 & Age <= 59 ~"40 - 50",
@@ -496,17 +509,38 @@ Happiness_map
 ```
 
 ```{r}
-Filtered_df <- Happiness_map%>%
-  group_by(Country, Year) %>%
-  mutate(count = row_number()) %>%
-  ungroup()
+countries <- unique(filtered_happiness$Country)
+
+# View the list of countries
+print(countries)
+```
+
+
+```{r}
+mean_data <- population_happiness %>%
+  group_by(Country) %>%
+  summarise(mean_feeling_of_happiness = mean(Feeling_of_happiness),
+            mean_life_satisfaction = mean(Life_satisfaction),
+            mean_financial_satisfaction = mean(Financial_satisfaction),
+            .groups = "drop")
 ```
 ```{r}
 # Remove duplicates and select only necessary columns
-Filtered_df <- Filtered_df %>%
-  distinct(Country, Year, .keep_all = TRUE)%>%
-  select(-count)
+mean_data <- drop_na(mean_data, Country)
+
+mean_data
 ```
+
+```{r}
+mean_data <- left_join(mean_data, region, by= "Country")
+
+```
+
+```{r}
+mean_data
+```
+
+
 
 ```{r}
 Filtered_df
@@ -516,6 +550,6 @@ Filtered_df
 - median
 
 ```{r}
-#write.csv(Happiness, "Happiness.csv")
+write.csv(mean_data, "mean_data.csv")
 ```
 
