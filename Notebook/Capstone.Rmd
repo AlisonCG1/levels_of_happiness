@@ -9,6 +9,7 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 library(tibble)
+library(sf)
 ```
 - The following corresponds to waves on which interviews took place.
 ```{r}
@@ -419,7 +420,7 @@ Population_total
 Thw following code is merging the population info table with happiness info table. 
 ```{r}
 # Perform a left join without losing rows
-population_happiness <-  dplyr::left_join(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
+population_happiness <-  merge(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
 
 # View the merged table
 print(population_happiness)
@@ -488,20 +489,10 @@ print(Happiness_levels)
 #write.csv(Happiness_levels, "Happiness_levels.csv")
 ```
 
-```{r}
-new_cases_plot = function(Happiness, plot_date) {
-  plot_df_new = subset(Happiness, date<=plot_date)
-  g1 = ggplot(plot_df_new, aes(x = Year, y = Life_satisfaction, colour = Region)) + geom_line() + geom_point(size = 1, alpha = 0.8) +
-    # geom_bar(position="stack", stat="identity") + 
-    ylab("Life Satisfaction") + xlab("Date") + theme_bw() + 
-    scale_colour_manual(values=c(Life_satistaction_cols)) +
-    scale_y_continuous(labels = function(l) {trans = l / 1000000; paste0(trans, "M")}) +
-    theme(legend.title = element_blank(), legend.position = "", plot.title = element_text(size=10), 
-          plot.margin = margin(5, 12, 5, 5))
-  g1
-}
-```
+
+
 
 ```{r}
-new_cases_plot
+#write.csv(Happiness, "Happiness.csv")
 ```
+

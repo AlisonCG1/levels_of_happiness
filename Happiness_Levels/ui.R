@@ -1,3 +1,9 @@
+library(shiny)
+library(shinydashboard)
+library(leaflet)
+
+
+
 ui <- dashboardPage(skin = "black",
                     
                     dashboardHeader(title = "Happiness levels", titleWidth = 450),
@@ -23,3 +29,7 @@ ui <- dashboardPage(skin = "black",
               
               fluidPage(
                 leafletOutput("mymap", height = 800))))))
+
+
+
+
