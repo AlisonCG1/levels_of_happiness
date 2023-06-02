@@ -10,6 +10,8 @@ library(ggplot2)
 library(readr)
 library(tibble)
 library(sf)
+library(GGally)
+library(corrplot)
 ```
 - The following corresponds to waves on which interviews took place.
 ```{r}
@@ -524,9 +526,6 @@ mean_copy <- filtered_happiness %>%
 mean_copy
 ```
 
-```{r}
-merged_copy
-```
 
 ```{r}
 unique(mean_copy$CountryCode)
@@ -535,7 +534,7 @@ unique(Population_total$CountryCode)
 
 
 ```{r}
-#mean_data <- merge(mean_copy, region, by = "Country", by.y = CountryCode, all.x = TRUE)
+mean_data <- merge(merged_data, region, by.y = "Country", by.x = "CountryCode")
 merged_data <- merge(mean_copy, Population_total, by = "CountryCode", all = TRUE)
 ```
 
@@ -545,11 +544,7 @@ plot_2
 ```
 
 ```{r}
-mean_copy <- merge(mean_copy, region, by = "Country", all = TRUE)
-```
-
-```{r}
-mean_copy
+merged_data
 ```
 
 ```{r}
@@ -572,11 +567,6 @@ plot_table
 # Exclude 'CountryCode' column from the Really_happy dataset
 plot_table <- plot_table[, !colnames(plot_table) %in% c("CountryCode")]
 
-# Create data 
-#data <- data.frame( var1 = 1:100 + rnorm(100,sd=20), v2 = 1:100 + rnorm(100,sd=27), v3 = rep(1, 100) + rnorm(100, sd = 1)) 
-#data$v4 = data$var1 ** 2 
-#data$v5 = -(data$var1 ** 2) 
- 
 # Check correlations (as scatterplots), distribution and print correlation coefficient 
 ggpairs(plot_table, title="correlogram with ggpairs()") 
 
@@ -587,16 +577,33 @@ plot_2 <- drop_na(drop_na(plot_table))
 ```
 
 ```{r}
-plot_2 <- plot_2[, !colnames(plot_2) %in% c("CountryCode")]
-plot_2 <- plot_2[, !colnames(plot_2) %in% c("Year")]
+subset_life <- plot_2[, c("mean_life_satisfaction", "gdp", "Number_below_$3.65_a_day")]
 
-# Increase the cardinality_threshold to 2000
-plot_2 <- plot_2 %>% ggpairs(cardinality_threshold = 2000, title = "correlogram with ggpairs()")
+
+subset_life$mean_life_satisfaction <- as.numeric(subset_life$mean_life_satisfaction)
+subset_life$gdp <- as.numeric(subset_life$gdp)
+subset_life$`Number_below_$3.65_a_day` <- as.numeric(subset_life$`Number_below_$3.65_a_day`)
+
+cor_matrix <- cor(subset_life)
+
+ggpairs(subset_life, title="correlogram with ggpairs()") 
 ```
 
-```{2}
-plot_2
+```{r}
+subset_data <- plot_2[, c("mean_financial_satisfaction", "gdp", "Number_below_$10_a_day")]
+
+
+subset_data$mean_financial_satisfaction <- as.numeric(subset_data$mean_financial_satisfaction)
+subset_data$gdp <- as.numeric(subset_data$gdp)
+subset_data$`Number_below_$10_a_day` <- as.numeric(subset_data$`Number_below_$10_a_day`)
+
+cor_matrix <- cor(subset_data)
+
+ggpairs(subset_data, title="correlogram with ggpairs()") 
 ```
+
+
+
 
 - Value counts for happiness 
 - Age (pivot)
