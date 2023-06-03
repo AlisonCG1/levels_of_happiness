@@ -627,7 +627,66 @@ happiness_plot%>%
 
 ```
 
+```{r}
+happiness_year <- happiness_plot %>%
+  filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
+  group_by(Year) %>%
+  summarise(col_mean = mean(Feeling_of_happiness))%>%
+  arrange(Year)
 
+ggplot(happiness_year, aes(x = Year, y = col_mean, color = Year)) +
+  geom_point(size = 5) +
+  xlab("Year") +
+  ylab("Happiness")
+```
+
+```{r}
+happiness_year_age <- happiness_plot %>%
+  filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
+  group_by( Age) %>%
+  summarise(col_mean = mean(Feeling_of_happiness))
+
+ggplot(happiness_year_age, aes(x = Age, y = col_mean, color = Age)) +
+  geom_point(size = 3) +
+  xlab("Year") +
+  ylab("Age") 
+```
+```{r}
+happiness_year_sex <- happiness_plot %>%
+  filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
+  group_by(Year, Sex) %>%
+  summarise(col_mean = mean(Feeling_of_happiness))
+
+ggplot(happiness_year_sex, aes(x = Year, y = col_mean, color = as.factor(Sex))) +
+  geom_point(size = 5) +
+  xlab("Year") +
+  ylab("Happiness")
+```
+
+```{r}
+top_country_plot <- happiness_plot %>%
+  filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
+   group_by(Country) %>%
+  summarise(col_mean = mean(Feeling_of_happiness))%>%
+  
+  
+  ggplot(aes(x=col_mean, y=Country, size=col_mean, fill=col_mean)) +
+  theme(axis.text.x=element_text(color = "black", size=10, angle=30, vjust=.9, hjust=0.8))+
+    geom_point(alpha=0.5, shape=21, color="black") +
+    scale_size(range = c(.1, 15), name="Death Rates per Continent")+
+   ylab("cause of death") +
+    xlab("Death rates per country") +
+    theme(legend.position = "right",
+          legend.title = element_text(colour = "black", size = 8, face = "bold"),
+          legend.text = element_text(colour = "black", size = 8),
+          legend.key = element_blank(),
+          legend.key.size = unit(0.6, "cm"))
+
+```
+
+```{r}
+top_country_plot
+```
 
 
 - Value counts for happiness 
