@@ -44,6 +44,19 @@ server <- function(input, output) {
                        "Life Satisfaction:", mean_life_satisfaction)
       )
   })
+  
+  output$graph <- renderPlot({
+    
+    happiness_plot%>%
+      filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
+      ggplot(aes(x = Feeling_of_happiness, y = Region, fill = factor(Region))) +
+      geom_bar(stat = "identity") +
+      labs(x = "Feeling of Happiness", y = "Count") +
+      theme_minimal()
+    
+  })
+  
+  
 }
   
 

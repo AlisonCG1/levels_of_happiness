@@ -119,6 +119,11 @@ GDP
 ```
 
 ```{r}
+colnames(GDP) <- GDP[2,]
+GDP <- GDP[-2, ]
+```
+
+```{r}
 GDP <- GDP[!(GDP$"Country Name" == "Data Source" | GDP$"Country Name" == "Last Updated Date"), ]
 GDP
 ```
@@ -534,13 +539,8 @@ unique(Population_total$CountryCode)
 
 
 ```{r}
-mean_data <- merge(merged_data, region, by.y = "Country", by.x = "CountryCode")
 merged_data <- merge(mean_copy, Population_total, by = "CountryCode", all = TRUE)
-```
-
-```{r}
-plot_2 <- merged_data
-plot_2
+mean_data <- merge(merged_data, region, by.y = "Country", by.x = "CountryCode")
 ```
 
 ```{r}
@@ -570,6 +570,10 @@ plot_table <- plot_table[, !colnames(plot_table) %in% c("CountryCode")]
 # Check correlations (as scatterplots), distribution and print correlation coefficient 
 ggpairs(plot_table, title="correlogram with ggpairs()") 
 
+```
+```{r}
+plot_2 <- merged_data
+plot_2
 ```
 
 ```{r}
@@ -602,6 +606,27 @@ cor_matrix <- cor(subset_data)
 ggpairs(subset_data, title="correlogram with ggpairs()") 
 ```
 
+```{r}
+happiness_plot <- read_csv("Happiness_levels.csv")
+```
+
+```{r}
+happiness_plot <- happiness_plot%>% 
+  select(-c(Length,Area, geometry))
+
+happiness_plot
+```
+
+```{r}
+happiness_plot%>%
+  filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
+      ggplot(aes(x = Feeling_of_happiness, y = Region, fill = factor(Region))) +
+      geom_bar(stat = "identity") +
+      labs(x = "Feeling of Happiness", y = "Count") +
+      theme_minimal()
+
+```
+
 
 
 
@@ -610,6 +635,6 @@ ggpairs(subset_data, title="correlogram with ggpairs()")
 - median
 
 ```{r}
-#write.csv(mean_copy, "mean_copy.csv")
+#write.csv(happiness_plot, "happiness_plot.csv")
 ```
 

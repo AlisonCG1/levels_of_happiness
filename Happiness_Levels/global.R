@@ -25,6 +25,8 @@ Life_satistaction_cols = "#FFF5F0"
 
 Happiness <- read_csv("mean_copy.csv")
 
+happiness_plot <- read_csv("happiness_plot.csv")
+
 
 #Creating correlation plots
 
