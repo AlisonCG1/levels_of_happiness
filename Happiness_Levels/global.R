@@ -28,9 +28,10 @@ Happiness <- read_csv("mean_copy.csv")
 happiness_plot <- read_csv("happiness_plot.csv")
 
 
-#Creating correlation plots
+happiness_plot <- happiness_plot%>% 
+ select(-c(...1, ...2))
 
-
+#Creating correlation plo
 
 
 

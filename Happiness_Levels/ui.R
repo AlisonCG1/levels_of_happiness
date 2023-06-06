@@ -10,8 +10,7 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Map", tabName = "Map", icon = icon("map")),
-      menuItem("Plots", icon = icon("th"), tabName = "Plots"),
-      selectInput("country", "Country:", choices = unique(Happiness$Country))
+      menuItem("Plots", icon = icon("th"), tabName = "Plots")
     )
   ),
   dashboardBody(
@@ -29,17 +28,32 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = "Plots",
-              fluidPage(plotOutput("graph", height = 250))
-      ),
-      
-      tabItem(tabName = "Explanation",
+              fluidPage(plotOutput("scatter_plot", height = 250)),
+              selectInput("yearInput", "Select Year", choices = unique(happiness_plot$Year)),
+              plotlyOutput("interactivePlot"),
+              
               fluidRow(
                 box(
-                  title = "Happiness Explained",
-                  plotOutput("point", height = 250, width = 800)
+                  title = "Happiness Females and Males",
+                  plotlyOutput("plot", height = 250, width = 800)
+                  
+                  
                 )
-              )
+                 
+              ),
+              
+              fluidRow(
+                box(
+                  title = "Happiness per Age",
+                  plotOutput("happiness_plot", height = 250, width = 800)    
+
+      ),
+      
+      tabItem(tabName = "Explanation"
+        
       )
     )
   )
+)
+)
 )
