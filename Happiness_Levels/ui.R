@@ -28,7 +28,7 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = "Plots",
-              fluidPage(plotOutput("scatter_plot", height = 250)),
+              fluidPage(plotOutput("graph", height = 250)),
               selectInput("yearInput", "Select Year", choices = unique(happiness_plot$Year)),
               plotlyOutput("interactivePlot"),
               
@@ -45,15 +45,21 @@ ui <- dashboardPage(
               fluidRow(
                 box(
                   title = "Happiness per Age",
-                  plotOutput("happiness_plot", height = 250, width = 800)    
+                  plotOutput("happiness_plot", height = 250, width = 800))   
 
       ),
+      
+      fluidRow(
+        box(
+          title = "Top 10 happiest Countries",
+          plotOutput("top10Plot", height = 250, width = 800)    
+          
+        )),
       
       tabItem(tabName = "Explanation"
         
       )
     )
   )
-)
 )
 )

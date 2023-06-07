@@ -8,17 +8,25 @@ library(DT)
 
 server <- function(input, output) {
   
-  filtered_data <- reactive({
-    # Filter the data based on user-selected input or any other criteria
-    filtered <- Happiness # Replace 'Happiness' with your actual dataset
-    # Remove rows with NaN values in happiness
-    filtered <- filtered[!is.na(filtered$mean_feeling_of_happiness), ]
-    # Remove rows with missing or invalid lat/lon values
-    filtered <- filtered[complete.cases(filtered$Latitude, filtered$Longitude), ]
-    # Apply any additional filters or transformations as needed
-    filtered
-  })
+filtered_data <- reactive({
+  filtered <- Happiness  # Replace 'Happiness' with your actual dataset
   
+  # Remove rows with NaN values in happiness
+  filtered <- filtered[!is.na(filtered$mean_feeling_of_happiness), ]
+  # Remove rows with missing or invalid lat/lon values
+  filtered <- filtered[complete.cases(filtered$Latitude, filtered$Longitude), ]
+  
+  # Join with the unhappiness_data based on 'Country' column
+  filtered <- merge(filtered, unhappiness, by = "Country", all.x = TRUE)
+  
+  # Round the values
+  filtered$mean_feeling_of_happiness <- round(filtered$mean_feeling_of_happiness, digits = 2)
+  filtered$mean_life_satisfaction <- round(filtered$mean_life_satisfaction, digits = 2)
+  
+  filtered
+  
+  filtered
+})
   output$mymap <- renderLeaflet({
     leaflet() %>%
       addTiles() %>%
@@ -43,50 +51,43 @@ server <- function(input, output) {
         icon = ~awesomeIcons(icon = "smile-o", markerColor = "orange", library = "fa"),
         popup = ~paste("Country:", Country, "<br>",
                        "Happiness:", mean_feeling_of_happiness, "<br>",
-                       "Life Satisfaction:", mean_life_satisfaction)
+                       "Life Satisfaction:", mean_life_satisfaction, "<br>") # Add the unhappiness mean
       )
   })
   
   output$graph <- renderPlot({
     happiness_plot %>%
       filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
-      ggplot(aes(x = Feeling_of_happiness, y = Region, fill = factor(Region))) +
+      group_by(Region) %>%
+      summarise(col_mean = mean(Feeling_of_happiness), .groups = "drop")%>%
+      ggplot(aes(x = col_mean, y = Region, fill = factor(Region))) +
       geom_bar(stat = "identity") +
       labs(x = "Feeling of Happiness", y = "Count") +
-      theme_minimal()
+      theme_minimal() 
+    
   })
   
-  output$scatter_plot <- renderPlot({
-   
-      happiness_year <- happiness_plot %>%
-      filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2)%>%
-      group_by(Year) %>%
-      summarise(col_mean = mean(Feeling_of_happiness)) %>%
-      arrange(desc(Year))
-    
-    ggplot(happiness_year, aes(x = Year, y = col_mean)) +
-      geom_line() +
-      geom_point() +
-      labs(x = "Year", y = "Mean Feeling of Happiness", title = "Happiness Plot")
-  })
   
   filteredData <- reactive({
-    happiness_plot%>%
-      filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
-      filter(Year == input$yearInput)
+    happiness_plot %>%
+      mutate(Year = factor(Year, levels = 1990:2022)) %>%
+      filter(Year == input$yearInput) %>%
+      mutate(Feeling_of_happiness = ifelse(Feeling_of_happiness %in% c(1, 2), "Happiness", "Unhappiness"))
   })
   
   output$interactivePlot <- renderPlotly({
     filteredData <- filteredData()
     
-    p <- ggplot(filteredData, aes(x = Feeling_of_happiness, y = Region, fill = factor(Region))) +
-      geom_bar(stat = "identity") +
-      labs(x = "Feeling of Happiness", y = "Count") +
-      theme_minimal()
+    p <- ggplot(filteredData(), aes(x = Year, fill = Feeling_of_happiness)) +
+      geom_bar(position = "fill") +
+      labs(x = "Year", y = "Percentage") +
+      scale_fill_manual(values = c("Happiness" = "green", "Unhappiness" = "#999999")) +
+      facet_wrap(~ Region, ncol = 2) +
+      theme_minimal() +
+      scale_y_continuous(labels = scales::percent)
     
     ggplotly(p)
-  
-})
+  })
   
   filteredFM <- reactive({
     happiness_year_sex <- happiness_plot %>%
@@ -100,8 +101,8 @@ server <- function(input, output) {
     happiness_year_sex <- happiness_plot %>%
       filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
       group_by(Sex) %>%
-      summarise(Happiness = sum(Feeling_of_happiness),
-                Life_satisfaction = sum(Life_satisfaction), .groups = "drop") 
+      summarise(Happiness = mean(Feeling_of_happiness),
+                Life_satisfaction = mean(Life_satisfaction), .groups = "drop") 
     # filter(Sex == input$sexInput, Year == input$yearInput)
     
     p <- ggplot(data = happiness_year_sex, aes(x = Life_satisfaction, y = Happiness, fill = factor(Sex))) +
@@ -116,7 +117,7 @@ server <- function(input, output) {
     filtered_data <- happiness_plot %>%
       filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
       group_by(Age) %>%
-      summarise(col_mean = sum(Feeling_of_happiness), .groups = "drop")
+      summarise(col_mean = mean(Feeling_of_happiness), .groups = "drop")
     filtered_data
   })
   
@@ -129,7 +130,8 @@ server <- function(input, output) {
       ylab("Happiness")
   })
     
-      
+    
+
       }
 
 server

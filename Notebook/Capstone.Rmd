@@ -204,6 +204,10 @@ happiness_1990 <- happiness1990%>%
     Year = V377)
 ```
 
+```{r}
+happiness_1990
+```
+
 - 1995
 ```{r}
 happiness_1995 <- happiness1995%>% 
@@ -215,6 +219,10 @@ happiness_1995 <- happiness1995%>%
     Sex = V214,
     Age = V216,
     Year = V238)
+```
+
+```{r}
+happiness_1995
 ```
 
 -1999.
@@ -286,10 +294,12 @@ happiness_2017$Year <- format(happiness_2017$Year, "%Y")
 ```{r}
 # Merge tables with the same column names
 merged_tables_1 <- rbind(happiness_1990, happiness_1995, happiness_2005)
+merged_tables_1
 ```
 
 ```{r}
 merged_tables_2 <- rbind(happiness_1999, happiness_2010, happiness_2017)
+merged_tables_2
 ```
 
 ```{r}
@@ -305,6 +315,10 @@ happiness_tables <- rbind(merged_tables_2, merged_tables_1)
 
 # Print the merged table
 happiness_tables
+```
+
+```{r}
+unique(happiness_tables$Country)
 ```
 
 ```{r}
@@ -420,6 +434,10 @@ filtered_happiness
 ```
 
 ```{r}
+filtered_happiness
+```
+
+```{r}
 Population_total
 ```
 - Starting to prepare the map. 
@@ -448,8 +466,8 @@ print(happiness_counts)
 countries_code
 ```
 ```{r}
-countries_code <- countries_code%>%
-  select(-c("country"))
+#countries_code <- countries_code%>%
+ # select(-c("country"))
 ```
 
 ```{r}
@@ -469,9 +487,6 @@ world_countries
 ```
 
 ```{r}
-regions <- regions%>%
-  select(-c("Code", "Year"))
-
 colnames(regions) <- c("Country", "Region")
 ```
 
@@ -481,6 +496,7 @@ regions
 
 ```{r}
 region <- left_join(regions, countries_code, by= "Country")
+region
 ```
 
 ```{r}
@@ -498,10 +514,19 @@ print(Happiness_levels)
 ```
 
 ```{r}
-Map_happiness <- Happiness_levels%>%
-  filter(Year == 2018)
-print(Map_happiness)
+# Calculate unhappiness by grouping the dataset by Country and Year
+unhappiness <- Happiness_levels %>%
+  filter(Feeling_of_happiness %in% c(3, 4)) %>%
+  group_by(Country, Year) %>%
+  summarise(Unhappiness_Count = n(), .groups = "drop")
+
+# Print the unhappiness dataframe
+print(unhappiness)
 ```
+```{r}
+unhappiness <- drop_na(drop_na(unhappiness))
+```
+
 
 - Creating a table for the map. 
 1. Creating a range of ages
@@ -642,9 +667,8 @@ ggplot(happiness_year, aes(x = Year, y = col_mean, color = Year)) +
 
 ```{r}
 happiness_year_age <- happiness_plot %>%
-  filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
   group_by(Age) %>%
-  summarise(col_mean = sum(Feeling_of_happiness))
+  summarise(col_mean = mean(Feeling_of_happiness))
 
 ggplot(happiness_year_age, aes(x = Age, y = col_mean, color = Age)) +
   geom_point(size = 2) +
@@ -695,13 +719,36 @@ happiness_year_sex <- happiness_plot %>%
     ggplotly(p)
 ```
 
-
-
-- Value counts for happiness 
-- Age (pivot)
-- median
+```{r}
+lmAge <- Happiness_levels%>%
+  lm(Feeling_of_happiness~Age, data = .)
+  summary(lmAge)
+```
+```{r}
+lmSex <- Happiness_levels%>%
+  lm(Feeling_of_happiness~Sex, data = .)
+  summary(lmSex)
+```
+```{r}
+lm_sex_age <- population_happiness%>%
+  lm(Feeling_of_happiness ~ Sex + Age + CountryCode, data = .)
+  summary(lm_sex_age)
+```
 
 ```{r}
-#write.csv(happiness_plot, "happiness_plot.csv")
+unique(population_happiness$CountryCode)%>%
+  sort()
+```
+
+
+
+```{r}
+ggplot(Happiness_levels, aes(Age, Feeling_of_happiness)) +
+  geom_point()
+```
+
+
+```{r}
+#write.csv(unhappiness, "unhappiness.csv")
 ```
 
