@@ -35,6 +35,7 @@ Poverty <- read.csv('../data/poverty-explorer.csv', header = FALSE)
 countries_code <- read_csv("../data/countries.csv.xls")
 world_countries <- read_csv("../data/World_Countries_(Generalized).csv")
 regions <- read_csv("../data/worldregions.csv")
+country_codes <- read_csv("../data/country_codes.csv")
 ```
 
 - After reading the data (Poverty, Total Population and GDP), there was some cleaning to do. 
@@ -204,10 +205,6 @@ happiness_1990 <- happiness1990%>%
     Year = V377)
 ```
 
-```{r}
-happiness_1990
-```
-
 - 1995
 ```{r}
 happiness_1995 <- happiness1995%>% 
@@ -219,10 +216,6 @@ happiness_1995 <- happiness1995%>%
     Sex = V214,
     Age = V216,
     Year = V238)
-```
-
-```{r}
-happiness_1995
 ```
 
 -1999.
@@ -433,30 +426,16 @@ print(sum_by_sex)
 filtered_happiness
 ```
 
-```{r}
-filtered_happiness
-```
 
 ```{r}
-Population_total
+Population_total <- Population_total%>%
+  select(-c("Year"))
 ```
+
+
 - Starting to prepare the map. 
 
-Thw following code is merging the population info table with happiness info table. 
-```{r}
-# Perform a left join without losing rows
-population_happiness <-  dplyr::left_join(filtered_happiness, Population_total, by = c("CountryCode", "Year"))
-
-# View the merged table
-print(population_happiness)
-```
-
-```{r}
-happiness_counts <- table(population_happiness$Year, population_happiness$Feeling_of_happiness)
-
-# View the resulting table of happiness counts
-print(happiness_counts)
-```
+The following code is merging the population info table with happiness info table. 
 
 - Now is time to merge the data for the map. 
 
@@ -465,14 +444,27 @@ print(happiness_counts)
 ```{r}
 countries_code
 ```
+
 ```{r}
-#countries_code <- countries_code%>%
- # select(-c("country"))
+countries_code <- countries_code%>%
+  select(-c("country"))
 ```
 
 ```{r}
 colnames(countries_code) <- c("Latitude", "Longitude", "Country")
 countries_code
+```
+
+```{r}
+country_codes <- country_codes%>%
+  select(-c("A2 (ISO)", "NUM (UN)", "DIALING CODE"))
+```
+
+```{r}
+colnames(country_codes) <- c("Country", "CountryCode")
+country_codes <- merge(countries_code, country_codes, by = "Country")
+
+country_codes
 ```
 
 ```{r}
@@ -487,15 +479,17 @@ world_countries
 ```
 
 ```{r}
-colnames(regions) <- c("Country", "Region")
+colnames(regions) <- c("Country", "CountryCode", "Year", "Region")
+```
+
+
+```{r}
+regions 
 ```
 
 ```{r}
-regions
-```
+region <- left_join(regions, countries_code, by = "Country")
 
-```{r}
-region <- left_join(regions, countries_code, by= "Country")
 region
 ```
 
@@ -504,45 +498,36 @@ region <- left_join(region, world_countries, by= "Country")
 
 region
 ```
+```{r}
+region <- region %>%
+  select(-c("Year"))
+```
+
 
 ```{r}
-# Perform a left join to merge the tables
-Happiness_levels <- merge(population_happiness, region, by = "Country", all.x = TRUE)
-
-# View the merged table
-print(Happiness_levels)
+# Merge filtered_happiness and region by CountryCode
+region_happiness <- left_join(filtered_happiness, region, by.x = "Country", by.y = "CountryCode", all.x = TRUE)
+all_happiness <- left_join(region_happiness, Population_total, by = c("CountryCode", "Country"), all.x = TRUE)
 ```
 
 ```{r}
-# Calculate unhappiness by grouping the dataset by Country and Year
-unhappiness <- Happiness_levels %>%
-  filter(Feeling_of_happiness %in% c(3, 4)) %>%
-  group_by(Country, Year) %>%
-  summarise(Unhappiness_Count = n(), .groups = "drop")
-
-# Print the unhappiness dataframe
-print(unhappiness)
+all_happiness
 ```
+
+
 ```{r}
-unhappiness <- drop_na(drop_na(unhappiness))
+unique(region_happiness$Country)
+```
+
+```{r}
+all_happiness <- drop_na(drop_na(all_happiness))
 ```
 
 
 - Creating a table for the map. 
-1. Creating a range of ages
-```{r}
-Happiness_map <- Map_happiness%>%
-  mutate(age_range = case_when(Age >= 13 & Age <=19 ~"13 - 18",
-                               Age >= 20 & Age <= 39 ~"20 - 30",
-                               Age >= 40 & Age <= 59 ~"40 - 50",
-                               Age >= 60 & Age <= 79 ~"60 - 70",
-                               Age >= 80 & Age <= 103 ~"80 +"))
-Happiness_map
-```
-
 
 ```{r}
-mean_copy <- filtered_happiness %>%
+mean_copy <- all_happiness %>%
   group_by(CountryCode) %>%
   summarise(mean_feeling_of_happiness = mean(Feeling_of_happiness),
             mean_life_satisfaction = mean(Life_satisfaction),
@@ -556,20 +541,21 @@ mean_copy <- filtered_happiness %>%
 mean_copy
 ```
 
-
 ```{r}
-unique(mean_copy$CountryCode)
-unique(Population_total$CountryCode)
-```
-
-
-```{r}
-merged_data <- merge(mean_copy, Population_total, by = "CountryCode", all = TRUE)
-mean_data <- merge(merged_data, region, by.y = "Country", by.x = "CountryCode")
+#merged_data <- merge(mean_copy, Population_total, by = "CountryCode", all = TRUE)
+mean_data <- merge(merged_data, region, by = c("CountryCode", "Country"), all.x = TRUE)
 ```
 
 ```{r}
-merged_data
+mean_data <- drop_na(drop_na(mean_data))
+```
+
+```{r}
+mean_data
+```
+
+```{r}
+unique(mean_data$Country)
 ```
 
 ```{r}
@@ -589,14 +575,6 @@ plot_table
 ```
 
 ```{r}
-# Exclude 'CountryCode' column from the Really_happy dataset
-plot_table <- plot_table[, !colnames(plot_table) %in% c("CountryCode")]
-
-# Check correlations (as scatterplots), distribution and print correlation coefficient 
-ggpairs(plot_table, title="correlogram with ggpairs()") 
-
-```
-```{r}
 plot_2 <- merged_data
 plot_2
 ```
@@ -605,31 +583,6 @@ plot_2
 plot_2 <- drop_na(drop_na(plot_table))
 ```
 
-```{r}
-subset_life <- plot_2[, c("mean_life_satisfaction", "gdp", "Number_below_$3.65_a_day")]
-
-
-subset_life$mean_life_satisfaction <- as.numeric(subset_life$mean_life_satisfaction)
-subset_life$gdp <- as.numeric(subset_life$gdp)
-subset_life$`Number_below_$3.65_a_day` <- as.numeric(subset_life$`Number_below_$3.65_a_day`)
-
-cor_matrix <- cor(subset_life)
-
-ggpairs(subset_life, title="correlogram with ggpairs()") 
-```
-
-```{r}
-subset_data <- plot_2[, c("mean_financial_satisfaction", "gdp", "Number_below_$10_a_day")]
-
-
-subset_data$mean_financial_satisfaction <- as.numeric(subset_data$mean_financial_satisfaction)
-subset_data$gdp <- as.numeric(subset_data$gdp)
-subset_data$`Number_below_$10_a_day` <- as.numeric(subset_data$`Number_below_$10_a_day`)
-
-cor_matrix <- cor(subset_data)
-
-ggpairs(subset_data, title="correlogram with ggpairs()") 
-```
 
 ```{r}
 happiness_plot <- read_csv("Happiness_levels.csv")
@@ -720,31 +673,42 @@ happiness_year_sex <- happiness_plot %>%
 ```
 
 ```{r}
-lmAge <- Happiness_levels%>%
+lmAge <- all_happiness%>%
   lm(Feeling_of_happiness~Age, data = .)
   summary(lmAge)
 ```
 ```{r}
-lmSex <- Happiness_levels%>%
+lmSex <- filtered_happiness%>%
   lm(Feeling_of_happiness~Sex, data = .)
   summary(lmSex)
 ```
 ```{r}
-lm_sex_age <- population_happiness%>%
+lm_sex_age <- region_happiness%>%
   lm(Feeling_of_happiness ~ Sex + Age + CountryCode, data = .)
   summary(lm_sex_age)
 ```
 
-```{r}
-unique(population_happiness$CountryCode)%>%
-  sort()
-```
-
 
 
 ```{r}
-ggplot(Happiness_levels, aes(Age, Feeling_of_happiness)) +
-  geom_point()
+ country_plot <- region_happiness %>%
+      slice_max(Country, n=50)%>%
+      group_by(Country)%>%
+      summarize(Rate = weighted.mean(Feeling_of_happiness))%>%
+      
+      ggplot(aes(x=Country, y=Feeling_of_happiness, size=Rate, fill=Country)) +
+      theme(axis.text.x=element_text(color = "black", size=10, angle=30, vjust=.9, hjust=0.8))+
+      geom_point(alpha=0.5, shape=21, color="black") +
+      scale_size(range = c(.1, 15), name="Death Rates per Continent")+
+      ylab("cause of death") +
+      xlab("Continent") +
+      theme(legend.position = "right",
+            legend.title = element_text(colour = "black", size = 5, face = "bold"),
+            legend.text = element_text(colour = "black", size = 5),
+            legend.key = element_blank(),
+            legend.key.size = unit(0.6, "cm"))
+
+ country_plot
 ```
 
 

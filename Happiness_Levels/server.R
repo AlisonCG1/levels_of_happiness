@@ -129,7 +129,25 @@ filtered_data <- reactive({
       xlab("Age") +
       ylab("Happiness")
   })
+  
+     output$country_plot <- renderPlot({
+      filtered_data <- happiness_plot %>%
+        group_by(Country) %>%
+        summarize(Rate = weighted.mean(Feeling_of_happiness))
+      
+      ggplot(filtered_data, aes(x = Country, y = Rate, size = Rate, fill = Country)) +
+        geom_point(alpha = 0.5, shape = 21, color = "black") +
+        scale_size(range = c(.1, 15), name = "Happiness per Country") +
+        ylab("Happiness") +
+        xlab("Country") +
+        theme(axis.text.x = element_text(color = "black", size = 10, angle = 30, vjust = .9, hjust = 0.8),
+              legend.position = "right",
+              legend.title = element_text(colour = "black", size = 5, face = "bold"),
+              legend.text = element_text(colour = "black", size = 5),
+              legend.key = element_blank(),
+              legend.key.size = unit(0.6, "cm"))
     
+  })
     
 
       }

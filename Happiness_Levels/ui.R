@@ -28,38 +28,48 @@ ui <- dashboardPage(
       ),
       
       tabItem(tabName = "Plots",
-              fluidPage(plotOutput("graph", height = 250)),
-              selectInput("yearInput", "Select Year", choices = unique(happiness_plot$Year)),
-              plotlyOutput("interactivePlot"),
-              
-              fluidRow(
-                box(
-                  title = "Happiness Females and Males",
-                  plotlyOutput("plot", height = 250, width = 800)
-                  
-                  
+              tabsetPanel(
+                tabPanel(
+                  "Happiness per region",
+                  fluidPage(
+                    plotOutput("graph", height = 250),
+                    selectInput("yearInput", "Select Year", choices = unique(happiness_plot$Year)),
+                    plotlyOutput("interactivePlot")
+                  )
+                ),
+                tabPanel(
+                  "Happiess per F/M",
+                  fluidPage(
+                    box(
+                      title = "Happiness Females and Males",
+                      plotlyOutput("plot", height = 250, width = 800)
+                    )
+                  )
+                ),
+                tabPanel(
+                  "Happiness per Country",
+                  fluidPage(
+                    box(
+                      title = "Happiness per country",
+                      plotOutput("country_plot", width = "800px", height = "600px")
+                    )
+                  )
+                ),
+                tabPanel(
+                  "in progress...",
+                  fluidPage(
+                    box(
+                      title = "Top 10 happiest Countries",
+                      plotOutput("top10Plot", height = 250, width = 800)
+                    )
+                  )
                 )
-                 
-              ),
-              
-              fluidRow(
-                box(
-                  title = "Happiness per Age",
-                  plotOutput("happiness_plot", height = 250, width = 800))   
-
+              )
       ),
       
-      fluidRow(
-        box(
-          title = "Top 10 happiest Countries",
-          plotOutput("top10Plot", height = 250, width = 800)    
-          
-        )),
-      
-      tabItem(tabName = "Explanation"
-        
+      tabItem(tabName = "Findings"
+              # Add content for the "Explanation" tab if needed
       )
     )
   )
-)
 )
