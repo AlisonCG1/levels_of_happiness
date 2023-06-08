@@ -112,10 +112,9 @@ filtered_data <- reactive({
     ggplotly(p)
   })
   
-  happiness_year_age <- reactive({
+  happiness_age <- reactive({
     
     filtered_data <- happiness_plot %>%
-      filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
       group_by(Age) %>%
       summarise(col_mean = mean(Feeling_of_happiness), .groups = "drop")
     filtered_data
@@ -149,6 +148,13 @@ filtered_data <- reactive({
     
   })
     
+     lmSex <- reactive({
+       lm(Feeling_of_happiness ~ Sex, data = filtered_happiness)
+     })
+     
+     output$lmSummary <- renderPrint({
+       summary(lmSex())
+     })
 
       }
 

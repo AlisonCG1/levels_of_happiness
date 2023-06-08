@@ -40,9 +40,17 @@ ui <- dashboardPage(
                 tabPanel(
                   "Happiess per F/M",
                   fluidPage(
+                    fluidRow(
                     box(
                       title = "Happiness Females and Males",
                       plotlyOutput("plot", height = 250, width = 800)
+                    )
+                    ),
+                    fluidRow(
+                    box(
+                      title = "Linear Model",
+                      verbatimTextOutput("lmSummary")
+                    )
                     )
                   )
                 ),

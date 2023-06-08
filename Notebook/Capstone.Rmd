@@ -661,15 +661,15 @@ ggplot(happiness_year_sex, aes(x = Year, y = col_mean, color = as.factor(Sex))) 
 happiness_year_sex <- happiness_plot %>%
       filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
       group_by(Sex) %>%
-      summarise(Happiness = sum(Feeling_of_happiness),
-                Life_satisfaction = sum(Life_satisfaction), .groups = "drop") 
+      summarise(Happiness = mean(Feeling_of_happiness),
+                Life_satisfaction = mean(Life_satisfaction), .groups = "drop") 
      # filter(Sex == input$sexInput, Year == input$yearInput)
 
  p <- ggplot(data = happiness_year_sex, aes(x = Life_satisfaction, y = Happiness, fill = factor(Sex))) +
       geom_bar(stat = "identity", position = position_dodge(), colour = "black") +
       scale_fill_manual(values = c("#999999", "#E69F00"))
     
-    ggplotly(p)
+p  
 ```
 
 ```{r}
@@ -689,27 +689,6 @@ lm_sex_age <- region_happiness%>%
 ```
 
 
-
-```{r}
- country_plot <- region_happiness %>%
-      slice_max(Country, n=50)%>%
-      group_by(Country)%>%
-      summarize(Rate = weighted.mean(Feeling_of_happiness))%>%
-      
-      ggplot(aes(x=Country, y=Feeling_of_happiness, size=Rate, fill=Country)) +
-      theme(axis.text.x=element_text(color = "black", size=10, angle=30, vjust=.9, hjust=0.8))+
-      geom_point(alpha=0.5, shape=21, color="black") +
-      scale_size(range = c(.1, 15), name="Death Rates per Continent")+
-      ylab("cause of death") +
-      xlab("Continent") +
-      theme(legend.position = "right",
-            legend.title = element_text(colour = "black", size = 5, face = "bold"),
-            legend.text = element_text(colour = "black", size = 5),
-            legend.key = element_blank(),
-            legend.key.size = unit(0.6, "cm"))
-
- country_plot
-```
 
 
 ```{r}
