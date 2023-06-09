@@ -43,17 +43,43 @@ ui <- dashboardPage(
                     fluidRow(
                     box(
                       title = "Happiness Females and Males",
-                      plotlyOutput("plot", height = 250, width = 800)
+                      plotlyOutput("plot", height = 250)
                     )
                     ),
                     fluidRow(
                     box(
-                      title = "Linear Model",
+                      title = "Linear Model F/M",
                       verbatimTextOutput("lmSummary")
                     )
-                    )
+                    ),
+                    fluidRow(
+                      box(
+                        title = "Happiness Age",
+                        plotOutput("happiness_age", height = 250)
+                      )
+                    ),
+                    
+                    fluidRow(
+                      box(
+                        title = "Linear model age",
+                        verbatimTextOutput("lmSummaryAge")
+                      )
+                    ),
+                    fluidRow(
+                      box(
+                        title = "happiness F/M Plot",
+                        plotOutput("happinessFMPlot", height = 250)
+                      )
+                    ), 
+                fluidRow(
+                  box(
+                    title = "linear model F/M Plot",
+                    verbatimTextOutput("lmSummaryAgeFM")
                   )
-                ),
+                ) 
+              )
+      ),
+                
                 tabPanel(
                   "Happiness per Country",
                   fluidPage(
@@ -68,7 +94,7 @@ ui <- dashboardPage(
                   fluidPage(
                     box(
                       title = "Top 10 happiest Countries",
-                      plotOutput("top10Plot", height = 250, width = 800)
+                      plotOutput("top10Plot")
                     )
                   )
                 )

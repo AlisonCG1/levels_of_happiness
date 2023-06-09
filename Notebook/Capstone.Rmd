@@ -620,13 +620,21 @@ ggplot(happiness_year, aes(x = Year, y = col_mean, color = Year)) +
 
 ```{r}
 happiness_year_age <- happiness_plot %>%
-  group_by(Age) %>%
-  summarise(col_mean = mean(Feeling_of_happiness))
+  group_by(Age, Sex) %>%
+  summarise(col_mean = mean(Feeling_of_happiness), .groups = "drop")
 
-ggplot(happiness_year_age, aes(x = Age, y = col_mean, color = Age)) +
+# Convert Sex to a factor
+happiness_year_age$Sex <- factor(happiness_year_age$Sex,
+                                 labels = c("Males", "Females"))
+
+
+ggplot(happiness_year_age, aes(x = Age, y = col_mean, color = Sex)) +
   geom_point(size = 2) +
   xlab("Age") +
-  ylab("Happiness") 
+  ylab("Happiness")  +
+  # Modify the legend labels
+  scale_color_manual(labels = legend_labels, 
+                     values = c("blue", "pink"))
 ```
 
 
@@ -645,17 +653,6 @@ ggplot(happiness_year_age, aes(x = Age, y = col_mean, color = Age)) +
 
 
 
-```{r}
-happiness_year_sex <- happiness_plot %>%
-  filter(Feeling_of_happiness >= 1 & Feeling_of_happiness <= 2) %>%
-  group_by(Year, Sex) %>%
-  summarise(col_mean = mean(Feeling_of_happiness))
-
-ggplot(happiness_year_sex, aes(x = Year, y = col_mean, color = as.factor(Sex))) +
-  geom_point(size = 5) +
-  xlab("Year") +
-  ylab("Happiness")
-```
 
 ```{r}
 happiness_year_sex <- happiness_plot %>%
@@ -673,7 +670,7 @@ p
 ```
 
 ```{r}
-lmAge <- all_happiness%>%
+lmAge <- filtered_happiness%>%
   lm(Feeling_of_happiness~Age, data = .)
   summary(lmAge)
 ```
@@ -682,9 +679,12 @@ lmSex <- filtered_happiness%>%
   lm(Feeling_of_happiness~Sex, data = .)
   summary(lmSex)
 ```
+
+
+
 ```{r}
-lm_sex_age <- region_happiness%>%
-  lm(Feeling_of_happiness ~ Sex + Age + CountryCode, data = .)
+lm_sex_age <- filtered_happiness%>%
+  lm(Feeling_of_happiness ~ Sex + Age, data = .)
   summary(lm_sex_age)
 ```
 

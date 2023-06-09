@@ -120,8 +120,8 @@ filtered_data <- reactive({
     filtered_data
   })
   
-  output$happiness_plot <- renderPlot({
-    data <- happiness_year_age()
+  output$happiness_age <- renderPlot({
+    data <- happiness_age()
     
     ggplot(data, aes(x = Age, y = col_mean, color = Age)) +
       geom_point(size = 2) +
@@ -148,12 +148,49 @@ filtered_data <- reactive({
     
   })
     
+     output$happinessFMPlot <- renderPlot({
+       # Previous code: Calculate happiness_year_age and plot the data
+       
+       happiness_year_age <- happiness_plot %>%
+         group_by(Age, Sex) %>%
+         summarise(col_mean = mean(Feeling_of_happiness), .groups = "drop")
+       
+       # Convert Sex to a factor
+       happiness_year_age$Sex <- factor(happiness_year_age$Sex,
+                                        labels = c("Males", "Females"))
+       
+       # Plot the data
+       ggplot(happiness_year_age, aes(x = Age, y = col_mean, color = Sex)) +
+         geom_point(size = 2) +
+         xlab("Age") +
+         ylab("Happiness") +
+         scale_color_manual(labels = c("Males", "Females"),
+                            values = c("blue", "pink"))
+     })
+    
      lmSex <- reactive({
+
        lm(Feeling_of_happiness ~ Sex, data = filtered_happiness)
      })
      
      output$lmSummary <- renderPrint({
        summary(lmSex())
+     })
+     
+     lmAge <- reactive({
+       lm(Feeling_of_happiness~Age, data = filtered_happiness)
+     })
+     
+     output$lmSummaryAge <- renderPrint({
+       summary(lmAge())
+     })
+     
+     lmAgeFM <- reactive({
+       lm(Feeling_of_happiness ~ Sex + Age, data = filtered_happiness)
+     })
+     
+     output$lmSummaryAgeFM <- renderPrint({
+       summary(lmAgeFM())
      })
 
       }
