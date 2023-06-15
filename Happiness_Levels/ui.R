@@ -11,7 +11,8 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Introduction", tabName = "Intro", icon = icon("info")),
       menuItem("Map", tabName = "Map", icon = icon("map")),
-      menuItem("Plots", icon = icon("th"), tabName = "Plots")
+      menuItem("Plots", icon = icon("th"), tabName = "Plots"), 
+      menuItem("Thank You!", tabName = "thankyou", icon = icon("heart"))
     )
   ),
   dashboardBody(
@@ -121,7 +122,7 @@ ui <- dashboardPage(
                   ),
                   fluidRow(
                     box(
-                      title = "Country happiness per Year",
+                      title = "Country happiness top 30",
                       plotOutput("country_plot",  width = "800px", height = "600px")
                     )
                 ),
@@ -186,16 +187,18 @@ ui <- dashboardPage(
               fluidRow(
                 box(
                   title = "Linear Model: Life Satisfaction",
+                  textOutput("text7"),
                   verbatimTextOutput("lmFinancial")
                 )
               )
+      )
+      )
       ),
           
-      tabItem(tabName = "Findings"
+      tabItem(tabName = "thankyou",
+              h2("Thank You for your time!."))
               # Add content for the "Explanation" tab if needed
       )
     )
   )
-)
-)
-)
+

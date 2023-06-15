@@ -186,8 +186,8 @@ server <- function(input, output) {
        # Create the ggplot
        ggplot(data = plot_Age, aes(x = Age, y = satisfaction, color = Age)) +
          geom_point() +
-         xlab("Life Satisfaction") +
-         ylab("Age") +
+         xlab("Age") +
+         ylab("Life Satisfaction") +
          ggtitle("Life Satisfaction and Age")
      
      })
