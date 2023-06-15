@@ -167,6 +167,7 @@ ui <- dashboardPage(
               fluidRow(
                 box(
                   title = "Linear Model: Life Satisfaction Age",
+                  textOutput("text6"),
                   verbatimTextOutput("lmAgesatisfaction")
                 )
               ),

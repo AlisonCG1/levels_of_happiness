@@ -307,7 +307,7 @@ server <- function(input, output) {
      output$text5 <- renderText("This linear model represents the relationship between happiness and life satisfaction. It indicates that for each unit increase of life satisfaction there's an increase in happiness")
      
      lmAgesatisfaction <- reactive({
-       lm(Life_satisfaction ~ Age + Sex + Life_satisfaction:Age + Life_satisfaction:Sex, data = Happiness)
+       lm(Life_satisfaction ~ Age + Sex, data = Happiness)
      })
      
      output$lmsummaryAgelife <- renderPrint({
@@ -318,6 +318,9 @@ server <- function(input, output) {
        lmSummary <- summary(lmAgesatisfaction())
        return(lmSummary)
      })
+     
+     output$text6 <- renderText("This linear model represent the relationship between life satisfaction, sex and age. this model show that the increase of age, life satisfaction algo increases. However, the relationship between these two variables ((p-value = 0.206)) suggests that age may not have a significant impact on life satisfaction in this model.
+                                The coefficient of sex, indicates that on average, females have a 0.0375910 unit higher in life satisfaction compared to males")
      
      lmFinancial <- reactive({
        
@@ -332,7 +335,7 @@ server <- function(input, output) {
        return(lmSummary)
      })
      
-
+     output$text7 <- renderText("This linear model represents the relationship between happiness, life satisfaction and financial satisfacion, where there is a constant between life satisfaction increasing one unit as happiness increases by 0.1215623. Also, financial satisfaction  is associated with a 0.0352582 increase in happiness.")
       }
 
 server
