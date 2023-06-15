@@ -23,154 +23,12 @@ happiness2010 <- read.table ('../data/WV6_Data_csv_v20201117.csv', sep = ";", he
 happiness2017 <- read.table ('../data/WVS_Cross-National_Wave_7_csv_v5_0.csv', sep = ",", header = TRUE, stringsAsFactors = FALSE)
 ```
 
-- Population Data
-```{r}
-GDP <- read.csv('../data/gdp.csv',  header = FALSE)
-Total_Population <- read.csv('../data/totalpopulation.csv', header = FALSE)
-Poverty <- read.csv('../data/poverty-explorer.csv', header = FALSE)
-```
-
 - Geolocation Data
 ```{r}
-countries_code <- read_csv("../data/countries.csv.xls")
+code_to_country <- read_csv("../data/code_to_country.csv")
 world_countries <- read_csv("../data/World_Countries_(Generalized).csv")
 regions <- read_csv("../data/worldregions.csv")
 country_codes <- read_csv("../data/country_codes.csv")
-```
-
-- After reading the data (Poverty, Total Population and GDP), there was some cleaning to do. 
-```{r}
-colnames(Poverty) <- Poverty[1,]
-Poverty <- Poverty[-1, ]
-```
-
-```{r}
-Poverty
-```
-```{r}
-poverty_transformed <-  Poverty%>%
-  transmute(
-    Country = Entity, 
-   `Number_below_$3.65_a_day` = `Number below $3.65 a day`,
-    `Number_below_$6.85_a_day` = `Number below $6.85 a day`,
-    `Number_below_$10_a_day` = `Number below $10 a day`,
-    Year = Year
-  )
-
-poverty_transformed
-```
-```{r}
-poverty_transformed <- poverty_transformed[!(poverty_transformed$Year >= 1969 & poverty_transformed$Year <= 1989), ]
-```
-
-
-```{r}
-Total_Population
-```
-
-```{r}
-colnames(Total_Population) <- Total_Population[3,]
-Total_Population <- Total_Population[-3, ]
-```
-
-```{r}
-# Delete rows with specific values
-Total_Population  <- Total_Population[!(Total_Population$"Country Name" == "Data Source" | Total_Population$"Country Name" == "Last Updated Date"), ]
-Total_Population
-```
-
-```{r}
-# Use pivot_longer to reshape the data
-population_transformed <- Total_Population %>%
-  pivot_longer(cols = `1960`:`2021`,
-               names_to = "Year",
-               values_to = "Value")
-
-# View the transformed dataframe
-print(population_transformed)
-```
-
-```{r}
-population_transformed <- population_transformed%>%
-  transmute(
-    Country = `Country Name`,
-    CountryCode = `Country Code`, 
-    total_population = Value,
-    Year = Year
-  )
-
-population_transformed
-```
-```{r}
-population_transformed <- population_transformed[!(population_transformed$Year >= 1960 & population_transformed$Year <= 1989), ]
-```
-
-
-```{r}
-GDP
-```
-
-```{r}
-colnames(GDP) <- GDP[2,]
-GDP <- GDP[-2, ]
-```
-
-```{r}
-GDP
-```
-
-```{r}
-colnames(GDP) <- GDP[2,]
-GDP <- GDP[-2, ]
-```
-
-```{r}
-GDP <- GDP[!(GDP$"Country Name" == "Data Source" | GDP$"Country Name" == "Last Updated Date"), ]
-GDP
-```
-```{r}
-# Use pivot_longer to reshape the data
-gdp_transformed <- GDP %>%
-  pivot_longer(cols = `1960`:`2021`,
-               names_to = "Year",
-               values_to = "Value")
-
-# View the transformed dataframe
-print(gdp_transformed)
-```
-
-- Deleting rows that aren't needed.
-```{r}
-gdp_transformed <- gdp_transformed%>%
-  transmute(
-    Country = `Country Name`,
-    CountryCode = `Country Code`, 
-    gdp = Value,
-    Year = Year
-  )
-
-gdp_transformed 
-```
-
-```{r}
-gdp_transformed <- gdp_transformed[!(gdp_transformed$Year >= 1960 & gdp_transformed$Year <= 1989), ]
-```
-
-```{r}
-gdp_transformed
-```
-
-
-- Merging tables. 
-```{r}
-# Merging the data frames based on 'CountryName'
-merged_df <- merge(poverty_transformed, population_transformed, by = c("Country", "Year"))
-
-Population_total <- merge(gdp_transformed, merged_df, by = c("Country", "CountryCode", "Year"))
-```
-
-```{r}
-Population_total
 ```
 
 - Data prep. The the second wave of surveys correspond to 1990 to 1994. 
@@ -205,6 +63,11 @@ happiness_1990 <- happiness1990%>%
     Year = V377)
 ```
 
+```{r}
+happiness_1990
+```
+
+
 - 1995
 ```{r}
 happiness_1995 <- happiness1995%>% 
@@ -218,11 +81,12 @@ happiness_1995 <- happiness1995%>%
     Year = V238)
 ```
 
+
 -1999.
 ```{r}
 happiness_1999 <- happiness1999%>% 
   transmute(
-    Country = B_COUNTRY_ALPHA,
+    CountryCode = B_COUNTRY_ALPHA,
     Feeling_of_happiness = V11,
     Life_satisfaction = V81,
     Financial_satisfaction = V80,
@@ -249,7 +113,7 @@ happiness_2005 <- happiness2005%>%
 ```{r}
 happiness_2010 <-happiness2010%>%
    transmute(
-    Country = C_COW_ALPHA, 
+    CountryCode = C_COW_ALPHA, 
     Feeling_of_happiness = V10,
     Life_satisfaction = V23,
     Financial_satisfaction = V59,
@@ -263,14 +127,17 @@ happiness_2010 <-happiness2010%>%
 ```{r}
 happiness_2017 <- happiness2017%>%
   transmute(
-    Country = C_COW_ALPHA,
+    CountryCode = C_COW_ALPHA,
     Feeling_of_happiness = Q46,
     Life_satisfaction = Q49,
     Financial_satisfaction = Q50,
     Sex = Q260,
     Age = Q262,
     Year = J_INTDATE)
+```
 
+```{r}
+happiness_2017
 ```
 
 -Fixing the date format in 2017 table. 
@@ -296,35 +163,39 @@ merged_tables_2
 ```
 
 ```{r}
+code_country_fixed <- left_join(merged_tables_1, code_to_country, by = "CountryCode")%>%
+  select(-CountryCode)%>%
+  rename(Country = CountryName)
+```
+```{r}
+country_codes <- country_codes%>%
+  select(-c("A2 (ISO)", "NUM (UN)", "DIALING CODE"))%>%
+  rename(Country = COUNTRY, CountryCode = "A3 (UN)")
+```
+
+```{r}
+code_countries <- left_join(code_country_fixed, country_codes, by ="Country")%>%
+  select(-Country)
+code_countries
+```
+
+```{r}
 # Add a missing column to merged_tables_1
-merged_tables_1$Country <- NA
-merged_tables_2$CountryCode <- NA
+#merged_tables_1$Country <- NA
+#merged_tables_2$CountryCode <- NA
 ```
 
 
 ```{r}
 # Merge the tables
-happiness_tables <- rbind(merged_tables_2, merged_tables_1)
+happiness_tables <- rbind(merged_tables_2, code_countries)
 
 # Print the merged table
 happiness_tables
 ```
 
 ```{r}
-unique(happiness_tables$Country)
-```
-
-```{r}
-# Drop duplicates based on all columns
-happiness_tables <- subset(happiness_tables, select = -CountryCode)
-```
-
-```{r}
-# Rename the column
-happiness_tables <- rename(happiness_tables, CountryCode = Country)
-
-# View the data frame with the renamed column
-print(happiness_tables)
+unique(happiness_tables$CountryCode)
 ```
 
 
@@ -346,7 +217,7 @@ happiness_tables %>% count(Financial_satisfaction, sort = TRUE)
 ```{r}
 # Filter rows based on specific values across all columns
 filtered_happiness <- happiness_tables %>%
-  filter(across(everything(), ~ !(. %in% c("-1", "-2", "-3", "-4", "-5")), .names = "any_vars({.col})"))
+  filter(across(everything(), ~ !(. %in% c("-1", "-2", "-3", "-4", "-5", "9")), .names = "any_vars({.col})"))
 
 # View the filtered data
 print(filtered_happiness)
@@ -427,12 +298,6 @@ filtered_happiness
 ```
 
 
-```{r}
-Population_total <- Population_total%>%
-  select(-c("Year"))
-```
-
-
 - Starting to prepare the map. 
 
 The following code is merging the population info table with happiness info table. 
@@ -442,29 +307,28 @@ The following code is merging the population info table with happiness info tabl
 - Clean geolocation data 
 
 ```{r}
-countries_code
+#countries_code
 ```
 
 ```{r}
-countries_code <- countries_code%>%
-  select(-c("country"))
+#countries_code <- countries_code
 ```
 
 ```{r}
-colnames(countries_code) <- c("Latitude", "Longitude", "Country")
-countries_code
+#colnames(countries_code) <- c("Latitude", "Longitude", "Country")
+#countries_code
 ```
 
 ```{r}
-country_codes <- country_codes%>%
-  select(-c("A2 (ISO)", "NUM (UN)", "DIALING CODE"))
+#country_codes <- country_codes%>%
+#  select(-c("A2 (ISO)", "NUM (UN)", "DIALING CODE"))
 ```
 
 ```{r}
-colnames(country_codes) <- c("Country", "CountryCode")
-country_codes <- merge(countries_code, country_codes, by = "Country")
+#colnames(country_codes) <- c("Country", "CountryCode")
+#country_codes <- merge(countries_code, country_codes, by = "Country")
 
-country_codes
+#country_codes
 ```
 
 ```{r}
@@ -488,39 +352,28 @@ regions
 ```
 
 ```{r}
-region <- left_join(regions, countries_code, by = "Country")
+region <- left_join(regions, country_codes, by = c("Country", "CountryCode"))%>%
+  select(-Year)
 
 region
-```
-
-```{r}
-region <- left_join(region, world_countries, by= "Country")
-
-region
-```
-```{r}
-region <- region %>%
-  select(-c("Year"))
 ```
 
 
 ```{r}
 # Merge filtered_happiness and region by CountryCode
-region_happiness <- left_join(filtered_happiness, region, by.x = "Country", by.y = "CountryCode", all.x = TRUE)
-all_happiness <- left_join(region_happiness, Population_total, by = c("CountryCode", "Country"), all.x = TRUE)
+all_happiness <- left_join(filtered_happiness, region, by ="CountryCode")
 ```
 
 ```{r}
 all_happiness
 ```
-
-
 ```{r}
-unique(region_happiness$Country)
+unique(all_happiness$Country)
 ```
 
 ```{r}
-all_happiness <- drop_na(drop_na(all_happiness))
+all_happiness <- all_happiness%>%
+  mutate(Feeling_of_happiness = 5 - Feeling_of_happiness)
 ```
 
 
@@ -528,7 +381,7 @@ all_happiness <- drop_na(drop_na(all_happiness))
 
 ```{r}
 mean_copy <- all_happiness %>%
-  group_by(CountryCode) %>%
+  group_by(Country) %>%
   summarise(mean_feeling_of_happiness = mean(Feeling_of_happiness),
             mean_life_satisfaction = mean(Life_satisfaction),
             mean_financial_satisfaction = mean(Financial_satisfaction),
@@ -540,48 +393,13 @@ mean_copy <- all_happiness %>%
 
 mean_copy
 ```
-
 ```{r}
-#merged_data <- merge(mean_copy, Population_total, by = "CountryCode", all = TRUE)
-mean_data <- merge(merged_data, region, by = c("CountryCode", "Country"), all.x = TRUE)
+mean_copy%>%
+  arrange(desc(mean_feeling_of_happiness))
 ```
 
-```{r}
-mean_data <- drop_na(drop_na(mean_data))
-```
 
-```{r}
-mean_data
-```
 
-```{r}
-unique(mean_data$Country)
-```
-
-```{r}
-plot_table <- filtered_happiness %>%
-  group_by(CountryCode) %>%
-  summarise(mean_feeling_of_happiness = mean(Feeling_of_happiness),
-            mean_life_satisfaction = mean(Life_satisfaction),
-            mean_financial_satisfaction = mean(Financial_satisfaction),
-            .groups = "drop")
-```
-
-```{r}
-# Remove duplicates and select only necessary columns
-plot_table <- drop_na(plot_table)
-
-plot_table
-```
-
-```{r}
-plot_2 <- merged_data
-plot_2
-```
-
-```{r}
-plot_2 <- drop_na(drop_na(plot_table))
-```
 
 
 ```{r}
@@ -619,7 +437,7 @@ ggplot(happiness_year, aes(x = Year, y = col_mean, color = Year)) +
 ```
 
 ```{r}
-happiness_year_age <- happiness_plot %>%
+happiness_year_age <- region_happiness %>%
   group_by(Age, Sex) %>%
   summarise(col_mean = mean(Feeling_of_happiness), .groups = "drop")
 
@@ -633,7 +451,7 @@ ggplot(happiness_year_age, aes(x = Age, y = col_mean, color = Sex)) +
   xlab("Age") +
   ylab("Happiness")  +
   # Modify the legend labels
-  scale_color_manual(labels = legend_labels, 
+  scale_color_manual(labels = labels, 
                      values = c("blue", "pink"))
 ```
 
@@ -670,12 +488,12 @@ p
 ```
 
 ```{r}
-lmAge <- filtered_happiness%>%
+lmAge <- all_happiness%>%
   lm(Feeling_of_happiness~Age, data = .)
   summary(lmAge)
 ```
 ```{r}
-lmSex <- filtered_happiness%>%
+lmSex <- all_happiness%>%
   lm(Feeling_of_happiness~Sex, data = .)
   summary(lmSex)
 ```
@@ -683,15 +501,137 @@ lmSex <- filtered_happiness%>%
 
 
 ```{r}
-lm_sex_age <- filtered_happiness%>%
-  lm(Feeling_of_happiness ~ Sex + Age, data = .)
+lm_sex_age <- all_happiness%>%
+  mutate(Sex = factor(Sex))%>%
+  lm(Feeling_of_happiness ~ Sex + Age + Sex:Age, data = .)
   summary(lm_sex_age)
+```
+
+```{r}
+     filtered_Country <- all_happiness %>%
+        group_by(Country) %>%
+        summarize(Rate = weighted.mean(Feeling_of_happiness))%>%
+  top_n(10, Rate)
+      
+      ggplot(filtered_Country, aes(x = Country, y = Rate, size = Rate, fill = Country)) +
+        geom_point(alpha = 0.5, shape = 21, color = "black") +
+        scale_size(range = c(.1, 15), name = "Happiness per Country") +
+        ylab("Happiness") +
+        xlab("Country") +
+        theme(axis.text.x = element_text(color = "black", size = 10, angle = 30, vjust = .9, hjust = 0.8),
+              legend.position = "right",
+              legend.title = element_text(colour = "black", size = 5, face = "bold"),
+              legend.text = element_text(colour = "black", size = 5),
+              legend.key = element_blank(),
+              legend.key.size = unit(0.6, "cm"))
+```
+
+```{r}
+lmcountry <- all_happiness%>%
+  lm(Feeling_of_happiness ~ Age + Country, data = .)
+  summary(lmcountry)
 ```
 
 
 
+```{r}
+plot_country<- all_happiness %>%
+        group_by(Country) %>%
+        summarize(happiness = weighted.mean(Feeling_of_happiness),
+                  satisfaction  = weighted.mean(Life_satisfaction))
+
+ggplot(data = plot_country, aes(x = happiness, y = satisfaction)) +
+  geom_point() +
+  xlab("Happiness") +
+  ylab("Life Satisfaction") +
+  ggtitle("Happiness vs. Life Satisfaction")
+```
+```{r}
+lm <- all_happiness%>%
+  lm(Feeling_of_happiness~Life_satisfaction + Financial_satisfaction, data = .)
+  summary(lm)
+```
 
 ```{r}
-#write.csv(unhappiness, "unhappiness.csv")
+plot_Age <- all_happiness %>%
+        group_by(Age) %>%
+        summarize(satisfaction  = weighted.mean(Life_satisfaction),
+                   .groups = "drop")
+
+ggplot(data = plot_Age, aes(x = Age, y= satisfaction, color = Age)) +
+  geom_point() +
+  xlab("Life Satisfaction") +
+  ylab("Age") +
+  ggtitle("Life Satisfaction and Age")
+```
+
+```{r}
+happiness_year_age <- all_happiness %>%
+  group_by(Age, Sex) %>%
+  summarise(satisfaction = mean(Life_satisfaction), .groups = "drop")
+
+# Convert Sex to a factor
+happiness_year_age$Sex <- factor(happiness_year_age$Sex,
+                                 labels = c("Males", "Females"))
+
+
+ggplot(happiness_year_age, aes(x = Age, y = satisfaction, color = Sex)) +
+  geom_point(size = 2) +
+  xlab("Sex") +
+  ylab("Life satisfaction")  +
+  # Modify the legend labels
+  scale_color_manual(labels = labels, 
+                     values = c("blue", "pink"))
+```
+```{r}
+lmcountry <- all_happiness%>%
+  lm(Life_satisfaction ~ Age + Sex, data = .)
+  summary(lmcountry)
+```
+
+```{r}
+plot_country2 <- all_happiness %>%
+        group_by(Country) %>%
+        summarize(happiness = weighted.mean(Feeling_of_happiness),
+                  money  = weighted.mean(Financial_satisfaction))
+
+ggplot(data = plot_country2, aes(x = happiness, y = money)) +
+  geom_point() +
+  xlab("Happiness") +
+  ylab("Financial satisfaction") +
+  ggtitle("Happiness vs. Financial Satisfaction")
+
+plot_country2
+```
+
+```{r}
+happiness_year_age <- all_happiness %>%
+  group_by(Age, Sex) %>%
+  summarise(Money = mean(Financial_satisfaction), .groups = "drop")
+
+# Convert Sex to a factor
+happiness_year_age$Sex <- factor(happiness_year_age$Sex,
+                                 labels = c("Males", "Females"))
+
+
+ggplot(happiness_year_age, aes(x = Age, y = Money, color = Sex)) +
+  geom_point(size = 2) +
+  xlab("Age") +
+  ylab("Financial satisfaction")  +
+  # Modify the legend labels
+  scale_color_manual(labels = labels, 
+                     values = c("blue", "pink"))
+```
+
+```{r}
+lmFinancial <- all_happiness%>%
+  lm(Feeling_of_happiness~Life_satisfaction + Financial_satisfaction, data = .)
+  summary(lmFinancial)
+```
+
+
+
+```{r}
+write.csv(all_happiness, "all_happiness.csv")
 ```
 

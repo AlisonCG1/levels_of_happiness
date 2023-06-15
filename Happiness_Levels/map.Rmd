@@ -1,0 +1,29 @@
+```{r}
+library(geojson)
+
+```
+
+```{r}
+countries <- geojsonio::geojson_read("countries.geojson", what = "sp")
+```
+```{r}
+countries@data <- countries@data%>%
+  mutate(randu = runif(n = 255))
+```
+```{r}
+countries@data
+```
+
+
+```{r}
+pal <- colorBin("YlOrRd", domain = countries@data$randu)
+
+ m <- leaflet(countries)%>%
+  addTiles() %>%
+  addPolygons(fillColor = ~pal(randu))
+```
+
+```{r}
+m 
+```
+
